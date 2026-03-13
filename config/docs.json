@@ -1,0 +1,98 @@
+[
+    {
+        "id": "git",
+        "category_id": "dev-tools",
+        "icon": "🐙",
+        "name": "Git",
+        "desc": "版本控制、分支協作、衝突處理",
+        "url": "dev-tools/git/"
+    },
+    {
+        "id": "docker",
+        "category_id": "dev-tools",
+        "icon": "🐳",
+        "name": "Docker",
+        "desc": "容器化、映像檔、Compose",
+        "url": "dev-tools/docker/"
+    },
+    {
+        "id": "vscode",
+        "category_id": "dev-tools",
+        "icon": "🖥️",
+        "name": "VS Code",
+        "desc": "快捷鍵、外掛、設定同步",
+        "url": "dev-tools/vscode/"
+    },
+    {
+        "id": "python",
+        "category_id": "languages",
+        "icon": "🐍",
+        "name": "Python",
+        "desc": "基礎語法、常用套件",
+        "url": "languages/python/"
+    },
+    {
+        "id": "javascript",
+        "category_id": "languages",
+        "icon": "🟨",
+        "name": "JavaScript",
+        "desc": "ES6+、非同步、DOM",
+        "url": "languages/javascript/"
+    },
+    {
+        "id": "typescript",
+        "category_id": "languages",
+        "icon": "🔷",
+        "name": "TypeScript",
+        "desc": "型別系統、介面、泛型",
+        "url": "languages/typescript/"
+    },
+    {
+        "id": "react",
+        "category_id": "frontend",
+        "icon": "⚛️",
+        "name": "React",
+        "desc": "元件、Hook、狀態管理",
+        "url": "frontend/react/"
+    },
+    {
+        "id": "css",
+        "category_id": "frontend",
+        "icon": "🎨",
+        "name": "CSS",
+        "desc": "Flexbox、Grid、動畫",
+        "url": "frontend/css/"
+    },
+    {
+        "id": "nodejs",
+        "category_id": "backend",
+        "icon": "🟩",
+        "name": "Node.js",
+        "desc": "Express、API 設計",
+        "url": "backend/nodejs/"
+    },
+    {
+        "id": "database",
+        "category_id": "backend",
+        "icon": "🗄️",
+        "name": "資料庫",
+        "desc": "SQL、索引、查詢優化",
+        "url": "backend/database/"
+    },
+    {
+        "id": "cicd",
+        "category_id": "teamwork",
+        "icon": "🔁",
+        "name": "CI/CD",
+        "desc": "GitHub Actions、自動部署",
+        "url": "teamwork/cicd/"
+    },
+    {
+        "id": "agile",
+        "category_id": "backend",
+        "icon": "🏃",
+        "name": "Agile",
+        "desc": "Scrum、Sprint、回顧會",
+        "url": "teamwork/agile/"
+    }
+]

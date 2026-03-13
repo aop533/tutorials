@@ -1,159 +1,51 @@
 <!doctype html>
 <html lang="zh-TW">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aop533 教學文件</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans TC', Arial, sans-serif; background: #f8f9fa; color: #1a1a2e; font-size: 15px; line-height: 1.7; }
-  .header { background: #1e3a5f; color: white; padding: 40px 32px; }
-  .header h1 { font-size: 1.8rem; font-weight: 900; }
-  .header p { color: #93c5fd; margin-top: 6px; font-size: 0.95rem; }
-  .container { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
-  .category { margin-bottom: 36px; }
-  .category-title {
-    font-size: 1rem; font-weight: 700; color: #6b7280;
-    text-transform: uppercase; letter-spacing: 1px;
-    border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;
-  }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .card {
-    background: white; border: 1px solid #e5e7eb;
-    border-radius: 10px; padding: 18px 20px;
-    text-decoration: none; color: inherit;
-    transition: box-shadow 0.15s, transform 0.15s;
-    display: block;
-  }
-  .card:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.12); transform: translateY(-2px); border-color: #93c5fd; }
-  .card .icon { font-size: 1.6rem; margin-bottom: 8px; }
-  .card .name { font-weight: 700; font-size: 0.95rem; }
-  .card .desc { font-size: 0.82rem; color: #6b7280; margin-top: 4px; }
-  .card.coming { opacity: 0.4; cursor: default; pointer-events: none; }
-  .badge { display: inline-block; background: #dcfce7; color: #16a34a; font-size: 0.7rem; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-top: 6px; }
-  .badge.soon { background: #f3f4f6; color: #9ca3af; }
-  .footer { text-align: center; color: #9ca3af; font-size: 0.8rem; padding: 32px; border-top: 1px solid #e5e7eb; margin-top: 16px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aop533 教學文件</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 </head>
+
 <body>
-
-<div class="header">
-  <div style="max-width:860px;margin:0 auto;">
-    <h1>📚 教學文件</h1>
-    <p>aop533 整理的開發教學，持續更新中</p>
-  </div>
-</div>
-
-<div class="container">
-
-  <div class="category">
-    <div class="category-title">🛠️ 開發工具</div>
-    <div class="cards">
-      <a class="card" href="dev-tools/git/">
-        <div class="icon">🐙</div>
-        <div class="name">Git</div>
-        <div class="desc">版本控制、分支協作、衝突處理</div>
-        <div class="badge">✓ 已完成</div>
-      </a>
-      <div class="card coming">
-        <div class="icon">🐳</div>
-        <div class="name">Docker</div>
-        <div class="desc">容器化、映像檔、Compose</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🖥️</div>
-        <div class="name">VS Code</div>
-        <div class="desc">快捷鍵、外掛、設定同步</div>
-        <div class="badge soon">即將推出</div>
-      </div>
+    <div class="header">
+        <div style="max-width:860px;margin:0 auto;">
+            <h1>📚 教學文件</h1>
+            <p>aop533 整理的開發教學，持續更新中</p>
+        </div>
     </div>
-  </div>
-
-  <div class="category">
-    <div class="category-title">💻 程式語言</div>
-    <div class="cards">
-      <div class="card coming">
-        <div class="icon">🐍</div>
-        <div class="name">Python</div>
-        <div class="desc">基礎語法、常用套件</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🟨</div>
-        <div class="name">JavaScript</div>
-        <div class="desc">ES6+、非同步、DOM</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🔷</div>
-        <div class="name">TypeScript</div>
-        <div class="desc">型別系統、介面、泛型</div>
-        <div class="badge soon">即將推出</div>
-      </div>
+    <div class="container" id="app">
+        <!-- 分類區塊 template -->
+        <template data-template="category">
+            <div class="category">
+                <div class="category-title"></div>
+                <div class="cards"></div>
+            </div>
+        </template>
+        <!-- 卡片 template：done / soon 兩個變體 -->
+        <template data-template="item">
+            <!-- 已完成：可點擊的 <a> -->
+            <a class="card" href="#" data-card="done">
+                <div class="icon" data-bind="icon"></div>
+                <div class="name" data-bind="name"></div>
+                <div class="desc" data-bind="desc"></div>
+                <span class="badge badge-done">✓ 已完成</span>
+            </a>
+            <!-- 即將推出：不可點擊的 <div> -->
+            <div class="card coming" data-card="soon">
+                <div class="icon" data-bind="icon"></div>
+                <div class="name" data-bind="name"></div>
+                <div class="desc" data-bind="desc"></div>
+                <span class="badge badge-soon">即將推出</span>
+            </div>
+        </template>
     </div>
-  </div>
-
-  <div class="category">
-    <div class="category-title">🎨 前端</div>
-    <div class="cards">
-      <div class="card coming">
-        <div class="icon">⚛️</div>
-        <div class="name">React</div>
-        <div class="desc">元件、Hook、狀態管理</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🎨</div>
-        <div class="name">CSS</div>
-        <div class="desc">Flexbox、Grid、動畫</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="category">
-    <div class="category-title">⚙️ 後端</div>
-    <div class="cards">
-      <div class="card coming">
-        <div class="icon">🟩</div>
-        <div class="name">Node.js</div>
-        <div class="desc">Express、API 設計</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🗄️</div>
-        <div class="name">資料庫</div>
-        <div class="desc">SQL、索引、查詢優化</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="category">
-    <div class="category-title">🤝 團隊協作</div>
-    <div class="cards">
-      <div class="card coming">
-        <div class="icon">🔁</div>
-        <div class="name">CI/CD</div>
-        <div class="desc">GitHub Actions、自動部署</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-      <div class="card coming">
-        <div class="icon">🏃</div>
-        <div class="name">Agile</div>
-        <div class="desc">Scrum、Sprint、回顧會</div>
-        <div class="badge soon">即將推出</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="footer">
-  aop533.github.io · 持續更新中
-</div>
-
+    <div class="footer">aop533.github.io · 持續更新中</div>
+    <script type="module">
+        import App from './js/app.js'; new App(document.querySelector('#app')).render({ categories: 'config/categories.json', items: 'config/items.json', config: 'config/config.json', });
+    </script>
 </body>
+
 </html>

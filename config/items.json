@@ -1,0 +1,86 @@
+[
+  {
+    "id": "git",
+    "category_id": "dev-tools",
+    "icon": "🐙",
+    "name": "Git",
+    "desc": "版本控制、分支協作、衝突處理"
+  },
+  {
+    "id": "docker",
+    "category_id": "dev-tools",
+    "icon": "🐳",
+    "name": "Docker",
+    "desc": "容器化、映像檔、Compose"
+  },
+  {
+    "id": "vscode",
+    "category_id": "dev-tools",
+    "icon": "🖥️",
+    "name": "VS Code",
+    "desc": "快捷鍵、外掛、設定同步"
+  },
+  {
+    "id": "python",
+    "category_id": "languages",
+    "icon": "🐍",
+    "name": "Python",
+    "desc": "基礎語法、常用套件"
+  },
+  {
+    "id": "javascript",
+    "category_id": "languages",
+    "icon": "🟨",
+    "name": "JavaScript",
+    "desc": "ES6+、非同步、DOM"
+  },
+  {
+    "id": "typescript",
+    "category_id": "languages",
+    "icon": "🔷",
+    "name": "TypeScript",
+    "desc": "型別系統、介面、泛型"
+  },
+  {
+    "id": "react",
+    "category_id": "frontend",
+    "icon": "⚛️",
+    "name": "React",
+    "desc": "元件、Hook、狀態管理"
+  },
+  {
+    "id": "css",
+    "category_id": "frontend",
+    "icon": "🎨",
+    "name": "CSS",
+    "desc": "Flexbox、Grid、動畫"
+  },
+  {
+    "id": "nodejs",
+    "category_id": "backend",
+    "icon": "🟩",
+    "name": "Node.js",
+    "desc": "Express、API 設計"
+  },
+  {
+    "id": "database",
+    "category_id": "backend",
+    "icon": "🗄️",
+    "name": "資料庫",
+    "desc": "SQL、索引、查詢優化"
+  },
+  {
+    "id": "cicd",
+    "category_id": "teamwork",
+    "icon": "🔁",
+    "name": "CI/CD",
+    "desc": "GitHub Actions、自動部署"
+  },
+  {
+    "id": "agile",
+    "category_id": "teamwork",
+    "icon": "🏃",
+    "name": "Agile",
+    "desc": "Scrum、Sprint、回顧會"
+  }
+]

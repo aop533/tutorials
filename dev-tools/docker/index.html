@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker 教學：Windows + WSL2 + macOS + Linux 跨平台實戰</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f9fa; --surface: #fff; --border: #e5e7eb;
+    --text: #1a1a2e; --muted: #6b7280;
+    --accent: #0ea5e9; --accent-dark: #0369a1; --accent-light: #f0f9ff;
+    --green: #16a34a; --green-bg: #f0fdf4;
+    --yellow: #b45309; --yellow-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2;
+    --blue: #1d4ed8; --blue-bg: #eff6ff;
+    --warn-bg: #fff7ed; --warn-border: #fb923c; --warn-text: #9a3412;
+    --win: #0078d4; --win-bg: #eff8ff;
+    --mac: #555; --mac-bg: #f9f9f9;
+    --linux: #e95420; --linux-bg: #fff5f2;
+  }
+  body { font-family: 'Noto Sans TC', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.75; }
+  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+
+  /* Header */
+  .doc-header { background: linear-gradient(135deg, #0c1a2e 0%, #0369a1 60%, #0ea5e9 100%); color: white; padding: 44px 40px; border-radius: 14px; margin-bottom: 28px; position: relative; overflow: hidden; }
+  .doc-header::after { content: '🐳'; position: absolute; right: 32px; top: 50%; transform: translateY(-50%); font-size: 6rem; opacity: 0.12; }
+  .doc-header h1 { font-size: 1.7rem; font-weight: 900; margin-bottom: 8px; }
+  .doc-header .subtitle { color: #bae6fd; font-size: 0.9rem; margin-bottom: 14px; }
+  .doc-header .meta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .doc-header .meta span { background: rgba(255,255,255,0.15); padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+
+  /* Intro */
+  .intro-card { background: var(--accent-light); border-left: 4px solid var(--accent); padding: 20px 24px; border-radius: 10px; margin-bottom: 24px; }
+  .intro-card h2 { color: var(--accent-dark); font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; }
+  .intro-card ul { padding-left: 0; list-style: none; }
+  .intro-card ul li { padding: 4px 0 4px 24px; position: relative; font-size: 0.88rem; border-bottom: 1px dashed #bae6fd; }
+  .intro-card ul li:last-child { border-bottom: none; }
+  .intro-card ul li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 900; }
+
+  /* TOC */
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 32px; }
+  .toc h2 { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+  .toc-grid a { font-size: 0.83rem; color: var(--accent-dark); text-decoration: none; padding: 2px 0; }
+  .toc-grid a:hover { text-decoration: underline; }
+
+  /* Chapter */
+  .chapter { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 36px; }
+  .chapter-title { font-size: 1.2rem; font-weight: 900; padding-bottom: 14px; border-bottom: 2px solid var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .chapter-num { background: var(--accent); color: white; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+
+  /* Step */
+  .step { background: var(--bg); border-left: 4px solid var(--accent); padding: 14px 18px; margin: 8px 0; border-radius: 0 8px 8px 0; }
+  .step-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; }
+  .step p { font-size: 0.87rem; color: #374151; margin-bottom: 6px; line-height: 1.65; }
+  .step p:last-child { margin-bottom: 0; }
+
+  /* Platform sections */
+  .platform-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
+  @media(max-width:680px){ .platform-grid { grid-template-columns: 1fr; } }
+  .platform-card { border-radius: 8px; padding: 14px 16px; font-size: 0.85rem; }
+  .platform-win { background: var(--win-bg); border-left: 4px solid var(--win); }
+  .platform-mac { background: var(--mac-bg); border-left: 4px solid var(--mac); }
+  .platform-linux { background: var(--linux-bg); border-left: 4px solid var(--linux); }
+  .platform-label { font-weight: 700; font-size: 0.8rem; margin-bottom: 6px; }
+  .platform-win .platform-label { color: var(--win); }
+  .platform-mac .platform-label { color: var(--mac); }
+  .platform-linux .platform-label { color: var(--linux); }
+
+  /* Code */
+  pre { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 18px; overflow-x: auto; font-family: Consolas, 'Courier New', monospace; font-size: 0.82rem; line-height: 1.6; margin: 8px 0; }
+  code { font-family: Consolas, 'Courier New', monospace; font-size: 0.85em; background: #f3f4f6; color: #be185d; padding: 1px 5px; border-radius: 3px; }
+
+  /* Tips */
+  .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  @media(max-width:580px){ .tips-grid { grid-template-columns: 1fr; } }
+  .tip { border-radius: 8px; padding: 12px 14px; border-left: 4px solid; font-size: 0.85rem; line-height: 1.6; }
+  .tip-label { font-weight: 700; font-size: 0.8rem; margin-bottom: 4px; }
+  .tip-green { background: var(--green-bg); border-color: var(--green); } .tip-green .tip-label { color: var(--green); }
+  .tip-yellow { background: var(--yellow-bg); border-color: #d97706; } .tip-yellow .tip-label { color: var(--yellow); }
+  .tip-red { background: var(--red-bg); border-color: var(--red); } .tip-red .tip-label { color: var(--red); }
+  .tip-blue { background: var(--blue-bg); border-color: var(--blue); } .tip-blue .tip-label { color: var(--blue); }
+
+  /* Warning */
+  .warning { background: var(--warn-bg); border: 2px solid var(--warn-border); border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+  .warning .warn-title { font-weight: 900; color: var(--warn-text); font-size: 0.9rem; margin-bottom: 8px; }
+  .warning ul { padding-left: 16px; }
+  .warning ul li { color: var(--warn-text); font-size: 0.85rem; margin: 4px 0; }
+
+  /* Section label */
+  .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Table */
+  .ref-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 10px 0; }
+  .ref-table th { background: var(--accent-dark); color: white; padding: 9px 12px; text-align: left; font-weight: 700; }
+  .ref-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ref-table tr:nth-child(even) td { background: var(--bg); }
+
+  /* Cheatsheet */
+  .cheat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+  @media(max-width:600px){ .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .cheat-card h4 { font-size: 0.83rem; font-weight: 700; color: var(--accent-dark); margin-bottom: 8px; }
+
+  /* Footer */
+  .doc-footer { background: #1e1e2e; color: #cdd6f4; border-radius: 12px; padding: 24px 28px; margin-top: 36px; font-size: 0.85rem; }
+  .doc-footer .hint { background: rgba(255,255,255,0.07); padding: 8px 14px; font-family: monospace; color: #a6e3a1; margin-top: 8px; font-size: 0.8rem; border-radius: 6px; }
+
+  hr.div { border: none; border-top: 1px dashed var(--border); margin: 8px 0 18px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="doc-header">
+  <h1>🐳 Docker 跨平台實戰教學</h1>
+  <div class="subtitle">Windows + WSL2 + Ubuntu + macOS + Linux 完整指南</div>
+  <div class="meta">
+    <span>📌 適用對象：新手～中階開發者</span>
+    <span>🖥️ 跨平台：Windows / macOS / Linux</span>
+    <span>📅 更新日期：2025-01-01</span>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="intro-card">
+  <h2>📖 學完這份文件你能做到什麼</h2>
+  <ul>
+    <li>在自己的平台（Windows WSL2 / macOS / Linux）完成 Docker 環境安裝與設定</li>
+    <li>用 docker run / build 跑起第一個容器，理解 Image 和 Container 的關係</li>
+    <li>用 Docker Compose 一鍵啟動多服務開發環境（如 App + DB）</li>
+    <li>正確設定 Volume 掛載、Port 映射，資料不再因容器刪除而消失</li>
+    <li>掌握常見錯誤排查技巧，遇到問題知道從哪裡下手</li>
+  </ul>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h2>📑 目錄</h2>
+  <div class="toc-grid">
+    <a href="#ch1">1. Docker 是什麼？核心概念總覽</a>
+    <a href="#ch8">8. Volume 與資料持久化</a>
+    <a href="#ch2">2. 各平台安裝路線總覽</a>
+    <a href="#ch9">9. Container Network 與 Port 映射</a>
+    <a href="#ch3">3. Windows：WSL2 + Docker Desktop</a>
+    <a href="#ch10">10. Docker Compose 多服務實戰</a>
+    <a href="#ch4">4. macOS 與 Linux 安裝</a>
+    <a href="#ch11">11. 開發流程整合與除錯</a>
+    <a href="#ch5">5. 跨平台專案最佳實務</a>
+    <a href="#ch12">12. 常見錯誤排查與救援</a>
+    <a href="#ch6">6. 第一個 Container</a>
+    <a href="#ch13">13. 情境速查與團隊最佳實務</a>
+    <a href="#ch7">7. Image 管理與 Docker Hub</a>
+    <a href="#cheat">快速指令小抄</a>
+  </div>
+</div>
+
+<!-- ===== CH1 ===== -->
+<div class="chapter" id="ch1">
+  <div class="chapter-title"><span class="chapter-num">第 1 章</span>Docker 是什麼？核心概念總覽</div>
+
+  <div class="step">
+    <div class="step-title">😩 步驟 1：傳統部署的痛點</div>
+    <p>「我電腦跑得起來，你那邊怎麼跑不起來？」這句話相信你一定聽過。原因是每個人的作業系統、語言版本、套件版本都不一樣，光是「把環境弄一致」就能耗掉半天。</p>
+    <p>Docker 就是用來解決這個問題的——它把「環境」打包進容器，讓你在任何機器上都能跑出一模一樣的結果。</p>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📦 步驟 2：Image 是藍圖，Container 是房子</div>
+    <p><strong>Image</strong>：唯讀的模板，記錄了「跑這個服務需要什麼環境、哪些檔案」。就像蓋房子的設計圖，本身不會執行。</p>
+    <p><strong>Container</strong>：Image 實際跑起來的實例。同一張 Image 可以同時跑出多個 Container，每個都是獨立的。</p>
+    <pre># Image → Container 的關係
+Image（設計圖）  →  docker run  →  Container（實際運行的房子）
+                               →  Container（另一棟，互不影響）</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🌐 步驟 3：Registry 是倉庫（Docker Hub）</div>
+    <p><strong>Docker Hub</strong> 是官方的公開 Image 倉庫，存放了數十萬個現成 Image（nginx、mysql、node、python…）。你可以直接 pull 下來用，也可以把自己的 Image push 上去分享。</p>
+    <pre>docker pull nginx        # 從 Docker Hub 下載 nginx Image
+docker push myapp:1.0   # 推送自己的 Image 到 Registry</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🏗️ 步驟 4：Docker 整體架構一眼看懂</div>
+    <p>Docker 的運作架構由三層組成：你下指令 → Docker Engine 執行 → 容器跑起來。</p>
+    <pre>你的電腦（Host）
+└── Docker Engine（守護程序，後台執行）
+    ├── Container A（nginx）
+    ├── Container B（mysql）
+    └── Container C（你的 App）</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🆚 步驟 5：Container vs 虛擬機（VM）</div>
+    <p>VM 是把整個作業系統虛擬化，很重；Container 只隔離程序和環境，共用 Host 的 OS kernel，啟動只要幾秒，資源消耗也小得多。</p>
+    <pre>VM：  Host OS → Hypervisor → Guest OS → App（啟動慢，檔案大）
+容器：Host OS → Docker Engine → Container → App（啟動秒級，輕量）</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>記憶口訣：Image = 食譜，Container = 炒出來的菜。同一份食譜可以炒出很多盤，但每盤都是獨立的。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Docker 不是虛擬機！Container 沒有自己的 OS kernel，共用 Host 的，所以比 VM 輕很多，但也因此 Windows Container 和 Linux Container 不能混跑。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>以為「刪掉 Container 就會失去 Image」——不會！Image 還在，隨時可以再 docker run 跑一個新的 Container。刪掉的只是那個執行中的實例。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>Docker 背後的底層技術是 Linux 的 cgroups + namespaces，這也是為什麼 Windows 上要透過 WSL2（Linux kernel）才能跑 Linux Container。</div>
+  </div>
+</div>
+
+<!-- ===== CH2 ===== -->
+<div class="chapter" id="ch2">
+  <div class="chapter-title"><span class="chapter-num">第 2 章</span>在各平台安裝 Docker 環境總覽</div>
+
+  <div class="step">
+    <div class="step-title">🗺️ 步驟 1：先判斷你的平台，找到對應章節</div>
+    <p>三種平台的安裝路線不同，找到自己的那條線，直接跳到對應章節：</p>
+  </div>
+
+  <div class="platform-grid">
+    <div class="platform-card platform-win">
+      <div class="platform-label">🪟 Windows</div>
+      <strong>建議路線：WSL2 + Ubuntu + Docker Desktop</strong><br>
+      在 WSL2 Ubuntu 內操作 docker 指令，效能最好、相容性最高。<br><br>
+      → <strong>看第 3 章</strong>
+    </div>
+    <div class="platform-card platform-mac">
+      <div class="platform-label">🍎 macOS</div>
+      <strong>安裝 Docker Desktop for Mac</strong><br>
+      直接在 macOS Terminal 或 VS Code Terminal 操作。注意 Intel / Apple Silicon 版本不同。<br><br>
+      → <strong>看第 4 章</strong>
+    </div>
+    <div class="platform-card platform-linux">
+      <div class="platform-label">🐧 Linux（Ubuntu）</div>
+      <strong>從官方 apt repository 安裝 Docker Engine</strong><br>
+      不需要 Docker Desktop，直接裝 Docker Engine 即可。<br><br>
+      → <strong>看第 4 章</strong>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">✅ 步驟 2：安裝前的準備檢查</div>
+    <p>安裝前確認幾件事，避免踩雷：</p>
+    <pre># 確認 Windows 版本（需 Windows 10 2004 以上 或 Windows 11）
+winver
+
+# macOS：確認晶片類型
+uname -m
+# x86_64 = Intel、arm64 = Apple Silicon
+
+# Linux：確認是 Ubuntu 20.04 / 22.04 / 24.04
+lsb_release -a</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📋 步驟 3：三平台安裝路線對照表</div>
+    <table class="ref-table">
+      <thead><tr><th>項目</th><th>🪟 Windows</th><th>🍎 macOS</th><th>🐧 Linux</th></tr></thead>
+      <tbody>
+        <tr><td>安裝方式</td><td>Docker Desktop（啟用 WSL2）</td><td>Docker Desktop for Mac</td><td>Docker Engine（apt）</td></tr>
+        <tr><td>指令環境</td><td>WSL2 Ubuntu Terminal</td><td>macOS Terminal</td><td>Linux Terminal</td></tr>
+        <tr><td>需要 GUI？</td><td>是（Docker Desktop）</td><td>是（Docker Desktop）</td><td>否</td></tr>
+        <tr><td>需要管理員？</td><td>是（WSL2 安裝時）</td><td>是（安裝時）</td><td>sudo 權限</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>團隊開發時，建議盡量統一平台（例如都用 Linux Container），可以減少「我這邊可以，你那邊不行」的問題。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Apple Silicon（M1/M2/M3）的 Mac 使用 arm64 架構，有些 Image 沒有 arm64 版本，pull 時會出現 WARNING 或跑不起來，需要加 <code>--platform linux/amd64</code> 強制用 x86 模擬。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>Windows 使用者下載了「Docker Desktop for Linux」或沒有啟用 WSL2 整合，導致在 PowerShell 能用 docker 但在 WSL2 裡不行。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>官方下載頁：docker.com/products/docker-desktop（Windows/Mac）；Linux 安裝文件：docs.docker.com/engine/install/ubuntu</div>
+  </div>
+</div>
+
+<!-- ===== CH3 ===== -->
+<div class="chapter" id="ch3">
+  <div class="chapter-title"><span class="chapter-num">第 3 章</span>Windows：WSL2 + Ubuntu + Docker Desktop 實戰安裝</div>
+
+  <div class="step">
+    <div class="step-title">🪟 步驟 1：啟用 WSL2 功能</div>
+    <p>用系統管理員身分開啟 PowerShell，執行以下指令。完成後會要求重開機。</p>
+    <pre># 以系統管理員執行 PowerShell
+wsl --install
+
+# 若已有 WSL1，升級為 WSL2
+wsl --set-default-version 2
+
+# 重開機後確認
+wsl --status</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🐧 步驟 2：安裝 Ubuntu 發行版</div>
+    <p>從 Microsoft Store 搜尋「Ubuntu」安裝（建議 Ubuntu 22.04 LTS），或用指令安裝：</p>
+    <pre># 查看可用的 Linux 發行版
+wsl --list --online
+
+# 安裝 Ubuntu 22.04
+wsl --install -d Ubuntu-22.04
+
+# 安裝完成後設定使用者名稱與密碼
+# 啟動 Ubuntu
+wsl -d Ubuntu-22.04</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🐳 步驟 3：下載並安裝 Docker Desktop for Windows</div>
+    <p>前往 docker.com 下載 Docker Desktop for Windows，安裝過程中確認勾選「Use WSL 2 instead of Hyper-V」。</p>
+    <pre># 安裝完成後，在 Docker Desktop 設定：
+# Settings → Resources → WSL Integration
+# → 開啟 "Enable integration with my default WSL distro"
+# → 勾選 Ubuntu-22.04</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔗 步驟 4：在 WSL2 Ubuntu 裡測試 Docker</div>
+    <p>打開 Ubuntu Terminal（不是 PowerShell），測試 Docker 是否正常運作：</p>
+    <pre># 在 WSL2 Ubuntu 內執行（不是 PowerShell）
+docker --version
+# Docker version 25.x.x, build ...
+
+docker run hello-world
+# 出現 "Hello from Docker!" 表示成功</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">⚠️ 步驟 5：重要！不要在 Ubuntu 裡再裝一套 Docker</div>
+    <p>Docker Desktop 已經透過 WSL2 整合提供了 Docker Engine，你在 Ubuntu 裡直接用就好。如果又在 Ubuntu 裡用 apt 安裝 Docker Engine，會出現兩個 daemon 衝突的問題。</p>
+    <pre># ❌ 不要在 WSL2 Ubuntu 裡執行這個
+sudo apt install docker.io   # 會造成衝突
+
+# ✅ 正確做法：Docker Desktop 設定好後直接在 Ubuntu 用
+docker ps   # 直接可以用，不需要 sudo</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>安裝 VS Code 並加裝「WSL」擴充套件，之後在 Ubuntu 裡執行 <code>code .</code> 就能直接用 VS Code 開啟 WSL2 裡的專案，體驗幾乎跟原生 Linux 一樣。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Docker Desktop 必須在 Windows 背景執行，WSL2 裡的 <code>docker</code> 指令才能用。如果 Docker Desktop 沒開，會出現 "Cannot connect to the Docker daemon" 錯誤。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>在 PowerShell 裡執行 docker 指令——雖然可以用，但建議養成習慣全部在 WSL2 Ubuntu 裡操作，路徑和權限問題會少很多。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>WSL2 使用完整的 Linux kernel，效能比 WSL1 好很多。如果你的電腦之前裝過 WSL1，記得用 <code>wsl --set-version Ubuntu 2</code> 升級。</div>
+  </div>
+</div>
+
+<!-- ===== CH4 ===== -->
+<div class="chapter" id="ch4">
+  <div class="chapter-title"><span class="chapter-num">第 4 章</span>macOS 與 Linux：原生 Docker 安裝與基本設定</div>
+
+  <div class="step">
+    <div class="step-title">🍎 macOS 步驟 1：下載 Docker Desktop for Mac</div>
+    <p>前往 docker.com/products/docker-desktop 下載，注意要選對版本：</p>
+    <pre># 確認你的 Mac 晶片
+uname -m
+# x86_64  → 下載 Intel 版
+# arm64   → 下載 Apple Silicon 版（M1/M2/M3）</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🍎 macOS 步驟 2：安裝與測試</div>
+    <p>下載 .dmg 後拖入 Applications，啟動 Docker Desktop，等狀態列 🐳 圖示變成穩定狀態，在 Terminal 測試：</p>
+    <pre>docker --version
+docker run hello-world
+# 出現 "Hello from Docker!" 代表成功</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🐧 Linux（Ubuntu）步驟 1：移除舊版本</div>
+    <p>Ubuntu 預設 apt 裡的 docker.io 版本較舊，建議從官方 repository 安裝最新版：</p>
+    <pre># 移除舊版（若有）
+sudo apt remove docker docker-engine docker.io containerd runc
+
+# 更新套件清單
+sudo apt update
+sudo apt install ca-certificates curl gnupg</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🐧 Linux（Ubuntu）步驟 2：加入官方 Repository 並安裝</div>
+    <pre># 加入 Docker 官方 GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 加入 repository
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list
+
+# 安裝 Docker Engine
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🐧 Linux（Ubuntu）步驟 3：設定非 root 使用者</div>
+    <p>預設需要 sudo 才能用 docker，建議把自己加入 docker 群組，就不用每次打 sudo：</p>
+    <pre>sudo usermod -aG docker $USER
+# 登出再重新登入後生效
+
+# 測試
+docker run hello-world   # 不用 sudo</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>macOS 使用者可以在 Docker Desktop → Settings → General 裡開啟「Start Docker Desktop when you log in」，這樣開機就自動啟動，不用每次手動開。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Apple Silicon Mac pull Image 時如果看到「WARNING: The requested image's platform (linux/amd64) does not match...」，加上 <code>--platform linux/amd64</code> 可用 Rosetta 2 模擬，但效能較差。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>Linux 裝完忘記把使用者加進 docker 群組，每次都要打 sudo，更慘的是 docker-compose 或腳本裡沒有 sudo 就會失敗。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>Linux 不需要裝 Docker Desktop，直接裝 Docker Engine 就好。Docker Desktop on Linux 是另一個付費產品，一般開發者用不到。</div>
+  </div>
+</div>
+
+<!-- ===== CH5 ===== -->
+<div class="chapter" id="ch5">
+  <div class="chapter-title"><span class="chapter-num">第 5 章</span>跨平台開發專案最佳實務（路徑與專案結構）</div>
+
+  <div class="step">
+    <div class="step-title">📁 步驟 1：各平台建議的專案存放位置</div>
+    <p>專案放哪裡直接影響 Docker Volume 掛載的效能與相容性，請照以下建議：</p>
+  </div>
+
+  <div class="platform-grid">
+    <div class="platform-card platform-win">
+      <div class="platform-label">🪟 Windows + WSL2</div>
+      <strong>✅ 建議：</strong><code>/home/yourname/projects/</code><br>
+      放在 Ubuntu 的本機檔案系統，效能最好。<br><br>
+      <strong>❌ 不建議：</strong><code>/mnt/c/Users/...</code><br>
+      跨 WSL2 和 Windows 的檔案系統，I/O 效能差 10 倍以上。
+    </div>
+    <div class="platform-card platform-mac">
+      <div class="platform-label">🍎 macOS</div>
+      <strong>✅ 建議：</strong><code>~/Projects/</code> 或 <code>~/Developer/</code><br>
+      直接在 macOS 本機檔案系統，IDE 直接開啟。<br><br>
+      避免把專案放在雲端同步資料夾（如 iCloud Drive），可能影響 Docker 掛載。
+    </div>
+    <div class="platform-card platform-linux">
+      <div class="platform-label">🐧 Linux（Ubuntu）</div>
+      <strong>✅ 建議：</strong><code>/home/yourname/projects/</code><br>
+      標準做法，效能最佳，直接在本機操作。<br><br>
+      避免放在 <code>/tmp</code>（重開機會清空）或 <code>/root/</code>（權限問題）。
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🗂️ 步驟 2：建議的專案目錄結構</div>
+    <p>建議在每個 Docker 專案裡維持以下結構，讓 Compose 和 Volume 掛載路徑一致：</p>
+    <pre>my-project/
+├── docker-compose.yml    # 服務定義
+├── .env                  # 環境變數（不要 commit）
+├── .gitignore
+├── app/                  # 你的應用程式碼
+│   ├── Dockerfile
+│   └── src/
+└── data/                 # 本機持久化資料（可加進 .gitignore）</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">💻 步驟 3：用 VS Code 開啟 WSL2 專案（Windows）</div>
+    <p>Windows 使用者安裝 VS Code 的「WSL」擴充套件後，在 Ubuntu Terminal 裡執行 <code>code .</code> 就能直接用 VS Code 開啟，左下角會顯示「WSL: Ubuntu」。</p>
+    <pre># 在 WSL2 Ubuntu Terminal 裡
+cd /home/yourname/projects/my-project
+code .   # 自動在 VS Code 以 WSL 模式開啟</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>Windows 使用者可以在 Windows 檔案總管輸入 <code>\\wsl$\Ubuntu\home\yourname\projects</code> 直接存取 WSL2 的檔案，方便複製貼上，但日常開發還是在 WSL2 Terminal 裡操作。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>不要把 <code>.env</code> 檔案 commit 進 Git！裡面通常有資料庫密碼、API Key，記得在 <code>.gitignore</code> 加上 <code>.env</code>。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>Windows 使用者把專案放在 <code>/mnt/c/Users/</code> 然後掛載進 Docker，導致檔案同步極慢、熱重載失效。專案一定要放在 Ubuntu 本機路徑。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>macOS 上 Docker Desktop 有內建檔案共享機制（VirtioFS），把 <code>~/</code> 下的路徑掛載進容器效能已大幅改善，不需要額外設定。</div>
+  </div>
+</div>
+
+<!-- ===== CH6 ===== -->
+<div class="chapter" id="ch6">
+  <div class="chapter-title"><span class="chapter-num">第 6 章</span>第一個 Container：從 Hello World 開始</div>
+
+  <div class="step">
+    <div class="step-title">🚀 步驟 1：跑第一個 Container</div>
+    <p>三個平台的指令完全一樣，在各自的 Terminal 執行：</p>
+    <pre>docker run hello-world
+# 成功後會看到 "Hello from Docker!" 的訊息</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔍 步驟 2：理解 docker run 做了什麼</div>
+    <p>docker run 背後依序做了四件事：在本機找 Image → 找不到就從 Hub pull → 建立 Container → 執行。</p>
+    <pre>docker run nginx
+# 1. 本機找 nginx Image → 沒有
+# 2. 從 Docker Hub pull nginx:latest
+# 3. 建立 Container
+# 4. 啟動 nginx（前景執行，Ctrl+C 停止）
+
+# 加上 -d 讓它在背景執行
+docker run -d -p 8080:80 nginx
+# 然後開瀏覽器看 http://localhost:8080</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📋 步驟 3：常用基本指令</div>
+    <pre>docker ps           # 列出執行中的 Container
+docker ps -a        # 列出所有 Container（含已停止）
+docker stop &lt;id&gt;   # 停止 Container
+docker rm &lt;id&gt;     # 刪除 Container（需先停止）
+docker images       # 列出本機所有 Image
+docker rmi &lt;image&gt; # 刪除 Image</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🎛️ 步驟 4：常用 docker run 參數</div>
+    <pre>docker run -d nginx              # -d 背景執行
+docker run -p 8080:80 nginx      # -p 主機埠:容器埠
+docker run -v /data:/app/data nginx  # -v 掛載 Volume
+docker run --name my-nginx nginx # --name 指定名稱
+docker run -e KEY=VALUE nginx    # -e 設環境變數
+docker run --rm nginx            # --rm 結束後自動刪 Container</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🖥️ 步驟 5：進入 Container 內部</div>
+    <p>想進去 Container 裡看看、執行指令，用 exec -it：</p>
+    <pre>docker exec -it my-nginx bash   # 進入 Container 的 bash
+docker exec -it my-nginx sh     # 若沒有 bash 用 sh
+# 在裡面可以執行任何 Linux 指令
+# 輸入 exit 或 Ctrl+D 離開</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>用 <code>docker run --rm -it ubuntu bash</code> 可以快速開一個乾淨的 Ubuntu 環境測試指令，結束後自動刪掉，不留垃圾。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div><code>docker stop</code> 是優雅停止（等 Container 處理完），<code>docker kill</code> 是強制停止。正常情況用 stop，緊急才用 kill。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>看到 "port is already allocated" 代表本機那個 port 已經被佔用，換一個主機 port（如 <code>-p 8081:80</code>）或先停掉佔用該 port 的程序。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div><code>-p 8080:80</code> 的格式是「主機 port：容器 port」，左邊是你在瀏覽器輸入的，右邊是容器裡的服務 port，不要搞反。</div>
+  </div>
+</div>
+
+<!-- ===== CH7 ===== -->
+<div class="chapter" id="ch7">
+  <div class="chapter-title"><span class="chapter-num">第 7 章</span>Image 管理與 Docker Hub</div>
+
+  <div class="step">
+    <div class="step-title">🔍 步驟 1：搜尋與下載 Image</div>
+    <pre>docker search nginx             # 搜尋 Docker Hub 上的 Image
+docker pull nginx               # 下載最新版（latest）
+docker pull nginx:1.25          # 下載特定版本
+docker pull mysql:8.0
+docker images                   # 查看本機所有 Image</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🏗️ 步驟 2：用 Dockerfile 建立自己的 Image</div>
+    <p>Dockerfile 是建立 Image 的指令檔，每一行指令都是一層（layer）：</p>
+    <pre># Dockerfile 範例（Node.js App）
+FROM node:20-alpine          # 基底 Image
+WORKDIR /app                 # 設定工作目錄
+COPY package*.json ./        # 複製 package.json
+RUN npm install              # 安裝依賴
+COPY . .                     # 複製所有檔案
+EXPOSE 3000                  # 聲明容器用的 port
+CMD ["node", "index.js"]     # 啟動指令</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔨 步驟 3：build 與 tag</div>
+    <pre># 在 Dockerfile 所在目錄執行
+docker build -t myapp:1.0 .
+# -t 指定名稱:版本，. 表示目前目錄
+
+docker tag myapp:1.0 myapp:latest  # 加上 latest tag
+docker images                       # 確認建立成功</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">⬆️ 步驟 4：推送 Image 到 Docker Hub</div>
+    <pre>docker login                        # 登入 Docker Hub
+docker tag myapp:1.0 yourusername/myapp:1.0
+docker push yourusername/myapp:1.0  # 推上去</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🧹 步驟 5：清理本機 Image</div>
+    <pre>docker rmi nginx:1.25       # 刪除特定 Image
+docker image prune          # 刪除沒有 tag 的 Image（dangling）</pre>
+  </div>
+
+  <div class="warning">
+    <div class="warn-title">⚠️ 警告：docker image prune -a</div>
+    <ul>
+      <li><code>docker image prune -a</code> 會刪除所有沒有被任何 Container 使用的 Image，包括你下載但沒跑的 Image。</li>
+      <li>執行前確認哪些 Image 你還需要，刪掉後需要重新 pull 才能用。</li>
+    </ul>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>選 Base Image 時優先選 <code>alpine</code> 版本（如 <code>node:20-alpine</code>），檔案比完整版小 10 倍以上，build 快、push 快、pull 也快。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Dockerfile 的每一行都是一個 layer，layer 越少越好。把多個 RUN 指令用 <code>&&</code> 串在一起可以減少 layer 數量，讓 Image 更小。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>把 <code>.env</code>、node_modules、.git 等不必要的檔案 COPY 進 Image。建立 <code>.dockerignore</code> 排除它們（格式跟 .gitignore 一樣）。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>Multi-stage build 可以在 build 階段用完整環境編譯，最後只複製執行檔到輕量 Image，讓 Production Image 極小化。適合編譯型語言（Go、Java、TypeScript）。</div>
+  </div>
+</div>
+
+<!-- ===== CH8 ===== -->
+<div class="chapter" id="ch8">
+  <div class="chapter-title"><span class="chapter-num">第 8 章</span>Volume 與資料持久化（含平台差異）</div>
+
+  <div class="step">
+    <div class="step-title">💾 步驟 1：為什麼需要 Volume</div>
+    <p>Container 刪掉之後，裡面的所有資料也會消失。Volume 讓資料「活在 Container 之外」，Container 重建後資料還在。</p>
+    <pre># 沒有 Volume：Container 刪掉，資料消失
+docker rm mysql-container   # DB 資料全沒了！
+
+# 有 Volume：資料存在 Volume，Container 可以重建
+docker volume create mysql-data
+docker run -v mysql-data:/var/lib/mysql mysql:8.0</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📂 步驟 2：兩種掛載方式</div>
+    <p><strong>Named Volume</strong>：由 Docker 管理，推薦用於資料庫等持久化資料。<strong>Bind Mount</strong>：直接掛載主機目錄，推薦用於開發時的程式碼同步。</p>
+    <pre># Named Volume（Docker 管理存放位置）
+docker run -v mysql-data:/var/lib/mysql mysql:8.0
+
+# Bind Mount（掛載主機目錄）
+docker run -v /home/user/app:/app node:20</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🗺️ 步驟 3：各平台 Bind Mount 路徑範例</div>
+  </div>
+
+  <div class="platform-grid">
+    <div class="platform-card platform-win">
+      <div class="platform-label">🪟 Windows + WSL2</div>
+      <pre style="font-size:0.78rem;margin-top:6px;">docker run -v \
+  /home/user/projects/app:/app \
+  node:20
+# 專案放在 Ubuntu 本機路徑
+# 不要用 /mnt/c/...</pre>
+    </div>
+    <div class="platform-card platform-mac">
+      <div class="platform-label">🍎 macOS</div>
+      <pre style="font-size:0.78rem;margin-top:6px;">docker run -v \
+  /Users/user/Projects/app:/app \
+  node:20
+# 或用 ~ 縮寫
+docker run -v ~/Projects/app:/app node:20</pre>
+    </div>
+    <div class="platform-card platform-linux">
+      <div class="platform-label">🐧 Linux</div>
+      <pre style="font-size:0.78rem;margin-top:6px;">docker run -v \
+  /home/user/projects/app:/app \
+  node:20
+# 跟 macOS 類似，用 ~ 也可以</pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🛠️ 步驟 4：Volume 管理指令</div>
+    <pre>docker volume ls                    # 列出所有 Volume
+docker volume inspect mysql-data    # 查看 Volume 詳細資訊
+docker volume rm mysql-data         # 刪除 Volume</pre>
+  </div>
+
+  <div class="warning">
+    <div class="warn-title">⚠️ 警告：docker volume rm 與 docker volume prune</div>
+    <ul>
+      <li><code>docker volume rm &lt;name&gt;</code>：永久刪除指定 Volume 的所有資料，<strong>無法復原</strong>。</li>
+      <li><code>docker volume prune</code>：刪除所有沒有被任何 Container 使用的 Volume，包括你以為還在用的 DB 資料。</li>
+      <li>執行前務必確認，或先備份資料。資料庫資料刪掉就真的沒了。</li>
+    </ul>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>開發時用 Bind Mount 掛載程式碼目錄，這樣你在 IDE 裡修改的程式碼，Container 裡馬上看得到，不用重 build Image。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Windows WSL2 用戶：Bind Mount 的路徑要用 Ubuntu 的路徑（<code>/home/...</code>），不要用 Windows 路徑（<code>C:\...</code>）或 WSL 的 <code>/mnt/c/...</code>，效能差很多。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>刪掉 Container 以為資料還在，結果沒設 Volume 導致資料全沒了。DB Container 一定要設 Volume！</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>Named Volume 的資料實際存在哪裡？Linux 在 <code>/var/lib/docker/volumes/</code>，macOS/Windows 在 Docker Desktop 的虛擬磁碟裡，不是 Host 的本機路徑。</div>
+  </div>
+</div>
+
+<!-- ===== CH9 ===== -->
+<div class="chapter" id="ch9">
+  <div class="chapter-title"><span class="chapter-num">第 9 章</span>Container Network 與 Port 映射</div>
+
+  <div class="step">
+    <div class="step-title">🌐 步驟 1：Container 的網路基本概念</div>
+    <p>每個 Container 都有自己的網路空間，預設加入 bridge network。Container 之間可以透過容器名稱互相連線，不需要透過主機。</p>
+    <pre>docker network ls               # 列出所有 network
+# NETWORK ID   NAME      DRIVER
+# abc123       bridge    bridge   ← 預設
+# def456       host      host
+# ghi789       none      null</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔌 步驟 2：Port 映射（-p）</div>
+    <p>Container 裡的服務預設外界無法存取，要用 -p 把容器 port 映射到主機 port：</p>
+    <pre># 格式：-p 主機port:容器port
+docker run -d -p 8080:80 nginx
+# 瀏覽器開 http://localhost:8080
+
+docker run -d -p 3306:3306 mysql:8.0
+# 本機 MySQL client 連 localhost:3306
+
+# 多個 port 映射
+docker run -d -p 80:80 -p 443:443 nginx</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔗 步驟 3：Container 之間的通訊（自訂 network）</div>
+    <p>同一個 network 裡的 Container 可以用容器名稱互連，不需要 IP：</p>
+    <pre># 建立自訂 network
+docker network create my-net
+
+# 把兩個 Container 加入同一個 network
+docker run -d --name app --network my-net myapp
+docker run -d --name db --network my-net mysql:8.0
+
+# app Container 裡可以用 "db" 當主機名連到 MySQL
+# mysql -h db -u root -p</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔍 步驟 4：查看 Container 網路資訊</div>
+    <pre>docker inspect my-container     # 查看完整資訊（含 IP）
+docker network inspect my-net   # 查看 network 內的 Container</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>用 Docker Compose 時不需要手動建 network，Compose 會自動建一個 network 讓所有服務互通，直接用服務名稱（如 <code>db</code>）當主機名連線就好。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>-p 只把 port 開放給主機，不代表開放給外部網路。如果要讓其他機器也能連，加 <code>-p 0.0.0.0:8080:80</code> 或在防火牆開放該 port。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>兩個 Container 都用預設 bridge network，發現用容器名稱連不到對方——預設 bridge network 不支援 DNS 解析，要用自訂 network 才行。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div><code>--network host</code> 讓 Container 直接用主機的 network，不需要 -p 映射，但這樣 Container 的隔離性降低，僅在 Linux 上有效，macOS/Windows 不支援。</div>
+  </div>
+</div>
+
+<!-- ===== CH10 ===== -->
+<div class="chapter" id="ch10">
+  <div class="chapter-title"><span class="chapter-num">第 10 章</span>Docker Compose：多服務協作實戰</div>
+
+  <div class="step">
+    <div class="step-title">📄 步驟 1：認識 docker-compose.yml</div>
+    <p>Compose 讓你用一個 YAML 檔定義所有服務，一個指令啟動整個開發環境：</p>
+    <pre># docker-compose.yml 基本結構
+services:
+  app:                          # 服務名稱
+    build: .                    # 用當前 Dockerfile build
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db               # 用服務名稱連 DB
+      DB_PORT: 3306
+
+  db:
+    image: mysql:8.0            # 直接用現成 Image
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myapp
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:                   # 宣告 Named Volume</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">▶️ 步驟 2：常用 Compose 指令</div>
+    <pre>docker compose up -d            # 背景啟動所有服務
+docker compose up --build -d    # 重新 build 後啟動
+docker compose down             # 停止並移除 Container
+docker compose down -v          # 停止並刪除 Volume（資料會消失！）
+docker compose logs -f          # 即時查看所有服務 log
+docker compose logs -f app      # 只看 app 服務的 log
+docker compose ps               # 查看服務狀態
+docker compose exec app bash    # 進入 app Container</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🌍 步驟 3：用 .env 管理環境變數</div>
+    <p>把敏感資訊放在 .env，Compose 會自動讀取，不用寫死在 yml 裡：</p>
+    <pre># .env 檔案
+DB_PASSWORD=mysecretpassword
+DB_NAME=myapp
+APP_PORT=3000
+
+# docker-compose.yml 裡這樣用
+environment:
+  MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+  MYSQL_DATABASE: ${DB_NAME}
+ports:
+  - "${APP_PORT}:3000"</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔄 步驟 4：開發環境熱重載設定</div>
+    <p>開發時 Bind Mount 程式碼進 Container，加上 nodemon 等工具，改了程式碼自動重啟：</p>
+    <pre>services:
+  app:
+    build: .
+    volumes:
+      - ./app:/app              # Bind Mount 程式碼
+      - /app/node_modules       # 保留 Container 裡的 node_modules
+    command: npm run dev        # 用 nodemon 等開發模式啟動</pre>
+  </div>
+
+  <div class="warning">
+    <div class="warn-title">⚠️ 警告：docker compose down -v</div>
+    <ul>
+      <li><code>docker compose down -v</code> 加上 <code>-v</code> 會刪除所有 Compose 定義的 Volume，包括資料庫的資料。</li>
+      <li>只有在你確定要「完全重置」開發環境時才加 <code>-v</code>，日常重啟用 <code>docker compose down</code> 就好。</li>
+    </ul>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div><code>docker compose up --build</code> 在每次啟動時重新 build Image，適合程式碼有更動時用。日常重啟用 <code>docker compose up -d</code> 比較快。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div><code>depends_on</code> 只保證 Container 的啟動順序，不保證服務已經 ready（DB 可能還在初始化）。App 連 DB 時要加重試邏輯。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>在 docker-compose.yml 裡 hardcode 密碼，然後 commit 進 Git。一定要用 .env 檔管理敏感資訊，並把 .env 加進 .gitignore。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>新版 Docker 已把 Compose 整合進 CLI（<code>docker compose</code>），舊版是獨立的 <code>docker-compose</code>（有連字號）。建議用新版，功能更完整。</div>
+  </div>
+</div>
+
+<!-- ===== CH11 ===== -->
+<div class="chapter" id="ch11">
+  <div class="chapter-title"><span class="chapter-num">第 11 章</span>開發流程整合與除錯技巧</div>
+
+  <div class="step">
+    <div class="step-title">📋 步驟 1：查看 Container Log</div>
+    <pre>docker logs my-container        # 查看 log
+docker logs -f my-container     # 即時追蹤 log（like tail -f）
+docker logs --tail 50 my-container  # 只看最後 50 行
+docker compose logs -f app      # Compose 服務 log</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔍 步驟 2：進入 Container 除錯</div>
+    <pre>docker exec -it my-container bash   # 進入 bash
+docker exec -it my-container sh     # 沒有 bash 用 sh
+# 在裡面可以：
+# - 看檔案：ls -la /app
+# - 查環境變數：env
+# - 測試網路：curl http://db:3306
+# - 看 process：ps aux</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📊 步驟 3：查看資源使用狀況</div>
+    <pre>docker stats                    # 即時 CPU / Memory 使用量
+docker inspect my-container     # 完整 Container 資訊（JSON）
+docker top my-container         # 查看 Container 內的 process</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🧹 步驟 4：清理開發環境</div>
+    <pre>docker system df                # 查看 Docker 佔用的磁碟空間
+docker system prune             # 清除停止的 Container、沒用的 Image 和 network</pre>
+  </div>
+
+  <div class="warning">
+    <div class="warn-title">⚠️ 警告：docker system prune -a --volumes</div>
+    <ul>
+      <li>這個指令會清除「所有停止的 Container、所有沒有 tag 的 Image、所有 network、以及所有未使用的 Volume」。</li>
+      <li>開發環境用這個可能會刪掉你以為還在的資料庫 Volume，導致資料消失。</li>
+      <li>建議只用 <code>docker system prune</code>（不加 --volumes），或明確指定要清理的項目。</li>
+    </ul>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>VS Code 安裝「Docker」擴充套件後，可以在 GUI 裡直接看到所有 Container / Image / Volume，右鍵就能 exec、看 log，比打指令方便很多。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Container 裡修改的檔案，在 Container 刪掉後就消失了（除非有 Bind Mount 或 Volume）。不要在 Container 裡直接修改設定，要在 Dockerfile 或 Compose 裡設定。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>Container 一直重啟（CrashLoopBackOff），但用 <code>docker logs</code> 卻看不到有用的資訊——加上 <code>--tail 100</code> 或 <code>-f</code> 追蹤，也可以用 <code>docker events</code> 看 Docker 層級的事件。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>Healthcheck 可以讓 Docker 知道你的服務是否真的 ready，在 Dockerfile 或 Compose 裡加 <code>healthcheck</code> 設定，<code>docker ps</code> 就會顯示健康狀態。</div>
+  </div>
+</div>
+
+<!-- ===== CH12 ===== -->
+<div class="chapter" id="ch12">
+  <div class="chapter-title"><span class="chapter-num">第 12 章</span>常見錯誤排查與回溯救援</div>
+
+  <div class="step">
+    <div class="step-title">❌ 情境 1：Cannot connect to the Docker daemon</div>
+    <pre># 錯誤訊息
+Cannot connect to the Docker daemon at unix:///var/run/docker.sock
+
+# 排查步驟
+# Windows / macOS：確認 Docker Desktop 有開啟並完全啟動
+# Linux：
+sudo systemctl status docker    # 確認 Docker daemon 是否在跑
+sudo systemctl start docker     # 若沒跑就啟動</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">❌ 情境 2：Port is already allocated</div>
+    <pre># 錯誤訊息
+Error: bind: address already in use
+
+# 排查：找出誰佔用了 port
+# Linux / macOS
+lsof -i :8080
+sudo kill -9 &lt;PID&gt;
+
+# Windows（PowerShell）
+netstat -ano | findstr :8080
+taskkill /PID &lt;PID&gt; /F
+
+# 或直接換一個主機 port
+docker run -p 8081:80 nginx</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">❌ 情境 3：Volume 資料不見了</div>
+    <pre># 確認 Volume 是否存在
+docker volume ls
+
+# 若找到 Volume 但 Container 找不到資料
+# 確認 Compose 的 volume 名稱是否正確
+docker volume inspect &lt;volume-name&gt;
+# 查看 Mountpoint 欄位確認資料位置</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">❌ 情境 4：Image build 失敗</div>
+    <pre># 看完整 build log 找錯誤
+docker build -t myapp . --progress=plain
+
+# 常見原因：
+# 1. COPY 的檔案不存在 → 確認路徑和 .dockerignore
+# 2. RUN npm install 失敗 → 確認 package.json 有複製進去
+# 3. 網路問題 → 換 npm registry 或用 --network host</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">❌ 情境 5：WSL2 特有問題（Windows）</div>
+    <pre># Docker Desktop 沒整合 WSL2
+# 去 Settings → Resources → WSL Integration → 勾選 Ubuntu
+
+# WSL2 記憶體佔用太高
+# 在 C:\Users\yourname\.wslconfig 加入：
+[wsl2]
+memory=4GB
+swap=2GB
+
+# 套用設定
+wsl --shutdown</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>遇到問題先執行 <code>docker logs &lt;container&gt;</code> 和 <code>docker inspect &lt;container&gt;</code>，90% 的問題在這兩個指令的輸出裡找得到線索。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>Apple Silicon Mac 遇到 <code>exec format error</code>，通常是跑了 x86 Image 但沒加 <code>--platform linux/amd64</code>，或是 build 時沒指定 platform。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>Compose 改了設定（如 port、volume）但 <code>docker compose up -d</code> 沒生效——需要先 <code>docker compose down</code> 再重新 up，才會套用新設定。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div><code>docker events</code> 可以即時監聽 Docker daemon 的所有事件（Container 啟動、停止、die 等），適合排查 Container 為什麼一直重啟。</div>
+  </div>
+</div>
+
+<!-- ===== CH13 ===== -->
+<div class="chapter" id="ch13">
+  <div class="chapter-title"><span class="chapter-num">第 13 章</span>常見情境速查與團隊最佳實務</div>
+
+  <div class="step">
+    <div class="step-title">⚡ 情境速查：日常開發常用</div>
+    <pre># 啟動開發環境
+docker compose up -d
+
+# 查看狀態
+docker compose ps
+docker compose logs -f
+
+# 重新 build 某個服務
+docker compose up --build app -d
+
+# 進入 Container
+docker compose exec app bash
+
+# 關閉開發環境（保留資料）
+docker compose down
+
+# 完全重置（刪除資料，慎用）
+docker compose down -v</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🌿 步驟 2：建議的分支與環境對應</div>
+    <pre># 建議在專案裡維護兩個 Compose 設定
+docker-compose.yml          # 開發環境（含 hot reload、debug port）
+docker-compose.prod.yml     # 正式環境（無 bind mount、資源限制）
+
+# 指定設定檔啟動
+docker compose -f docker-compose.prod.yml up -d</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">📋 步驟 3：團隊規範建議</div>
+    <pre># 每個專案必備檔案
+.env.example          # 環境變數範本（commit 進 git）
+.env                  # 實際環境變數（加進 .gitignore）
+.dockerignore         # 排除不需要的檔案
+docker-compose.yml    # 開發環境定義
+README.md             # 說明如何啟動開發環境</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">🔒 步驟 4：安全性基本注意</div>
+    <pre># 不要用 root 跑 App
+USER node              # 在 Dockerfile 裡切換使用者
+
+# 不要把敏感資訊寫在 Dockerfile 或 Image 裡
+# 用 .env 或 Docker Secrets 管理
+
+# 定期更新 Base Image
+docker pull node:20-alpine   # 重新 pull 最新版
+docker compose up --build    # 重新 build</pre>
+  </div>
+
+  <div class="section-label">💡 本章提示卡</div>
+  <div class="tips-grid">
+    <div class="tip tip-green"><div class="tip-label">🟢 實用技巧</div>在 README.md 裡加一段「快速開始」，讓新成員只要執行 <code>cp .env.example .env</code> 然後 <code>docker compose up -d</code> 就能跑起整個開發環境，不需要看落落長的設定文件。</div>
+    <div class="tip tip-yellow"><div class="tip-label">🟡 注意事項</div>不同平台的團隊成員（Windows WSL2 / macOS / Linux）在 Volume 路徑和換行符上可能有差異，建議在 .gitattributes 統一換行符，並在文件裡標注各平台的注意事項。</div>
+    <div class="tip tip-red"><div class="tip-label">🔴 常見錯誤</div>直接把 Production 的 docker-compose.yml 拿來開發用，沒有 Bind Mount 導致每次改程式碼都要重 build，浪費大量時間。開發和正式環境要分開設定。</div>
+    <div class="tip tip-blue"><div class="tip-label">🔵 補充說明</div>CI/CD 環境（GitHub Actions / GitLab CI）也可以用 Docker 跑測試，確保「測試環境 = 開發環境 = 正式環境」的一致性，這是導入 Docker 最大的價值之一。</div>
+  </div>
+</div>
+
+<!-- ===== CHEATSHEET ===== -->
+<div class="chapter" id="cheat">
+  <div class="chapter-title">⚡ 快速指令小抄</div>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>🐳 Container 管理</h4>
+      <pre>docker ps -a
+docker run -d -p 80:80 nginx
+docker stop &lt;id&gt;
+docker rm &lt;id&gt;
+docker exec -it &lt;id&gt; bash
+docker logs -f &lt;id&gt;
+docker stats</pre>
+    </div>
+    <div class="cheat-card">
+      <h4>📦 Image 管理</h4>
+      <pre>docker images
+docker pull nginx:latest
+docker build -t myapp:1.0 .
+docker rmi &lt;image&gt;
+docker image prune
+docker push user/myapp:1.0</pre>
+    </div>
+    <div class="cheat-card">
+      <h4>🔧 Docker Compose</h4>
+      <pre>docker compose up -d
+docker compose up --build -d
+docker compose down
+docker compose down -v
+docker compose logs -f
+docker compose ps
+docker compose exec app bash</pre>
+    </div>
+    <div class="cheat-card">
+      <h4>💾 Volume & Network</h4>
+      <pre>docker volume ls
+docker volume create mydata
+docker volume rm mydata
+docker volume prune
+docker network ls
+docker network create my-net
+docker system prune</pre>
+    </div>
+  </div>
+
+  <!-- Ref Table -->
+  <div style="margin-top:20px;">
+    <strong style="font-size:0.9rem;">📋 常用 docker run 參數對照表</strong>
+    <table class="ref-table" style="margin-top:10px;">
+      <thead><tr><th>參數</th><th>說明</th><th>範例</th></tr></thead>
+      <tbody>
+        <tr><td><code>-d</code></td><td>背景執行</td><td><code>docker run -d nginx</code></td></tr>
+        <tr><td><code>-p</code></td><td>Port 映射（主機:容器）</td><td><code>-p 8080:80</code></td></tr>
+        <tr><td><code>-v</code></td><td>Volume 掛載</td><td><code>-v ./data:/app/data</code></td></tr>
+        <tr><td><code>-e</code></td><td>設定環境變數</td><td><code>-e DB_HOST=localhost</code></td></tr>
+        <tr><td><code>--name</code></td><td>指定 Container 名稱</td><td><code>--name my-nginx</code></td></tr>
+        <tr><td><code>--rm</code></td><td>結束後自動刪 Container</td><td><code>docker run --rm ubuntu bash</code></td></tr>
+        <tr><td><code>--network</code></td><td>加入指定 network</td><td><code>--network my-net</code></td></tr>
+        <tr><td><code>--platform</code></td><td>指定 Image 架構</td><td><code>--platform linux/amd64</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div><strong>📌 如何把這份文件貼到 Google Doc</strong></div>
+  <div class="hint">瀏覽器開啟 → Ctrl+A → Ctrl+C → 貼入 Google Doc（Ctrl+V）</div>
+  <p style="margin-top:12px;font-size:0.78rem;color:#6b7280;">版本：v1.0.0 ｜更新日期：2025-01-01 ｜適用 Docker 版本：24.x / 25.x + Compose v2</p>
+</div>
+
+</div>
+</body>
+</html>

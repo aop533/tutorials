@@ -1,0 +1,136 @@
+*,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    
+    body {
+        font-family: 'Noto Sans TC', Arial, sans-serif;
+        background: #f8f9fa;
+        color: #1a1a2e;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+    
+    .header {
+        background: #1e3a5f;
+        color: white;
+        padding: 40px 32px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+        font-weight: 900;
+    }
+    
+    .header p {
+        color: #93c5fd;
+        margin-top: 6px;
+        font-size: 0.95rem;
+    }
+    
+    .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 24px;
+    }
+    
+    .category {
+        margin-bottom: 36px;
+    }
+    
+    .category-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+    
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+    }
+    
+    .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 18px 20px;
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.15s, transform 0.15s;
+        display: block;
+    }
+    
+    .card:hover {
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+        transform: translateY(-2px);
+        border-color: #93c5fd;
+    }
+    
+    .card.coming {
+        opacity: 0.4;
+        cursor: default;
+        pointer-events: none;
+    }
+    
+    .card .icon {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+    }
+    
+    .card .name {
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    
+    .card .desc {
+        font-size: 0.82rem;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    
+    .badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 1px 8px;
+        border-radius: 10px;
+        margin-top: 6px;
+    }
+    
+    .badge-done {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .badge-soon {
+        background: #f3f4f6;
+        color: #9ca3af;
+    }
+    
+    .state-msg {
+        text-align: center;
+        padding: 60px;
+        font-size: 0.9rem;
+    }
+    
+    .state-msg.error {
+        color: #dc2626;
+    }
+    
+    .footer {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.8rem;
+        padding: 32px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 16px;
+    }

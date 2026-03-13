@@ -1,0 +1,7 @@
+[
+  { "id": "dev-tools",  "icon": "🛠️", "name": "開發工具" },
+  { "id": "languages",  "icon": "💻", "name": "程式語言" },
+  { "id": "frontend",   "icon": "🎨", "name": "前端" },
+  { "id": "backend",    "icon": "⚙️", "name": "後端" },
+  { "id": "teamwork",   "icon": "🤝", "name": "團隊協作" }
+]
