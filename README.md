@@ -1,15 +1,15 @@
-# aop533.github.io
+# tutorials
 
 個人教學文件網站，使用 GitHub Pages 架設。
 
 ## 網址
 
-https://aop533.github.io
+https://aop533.github.io/tutorials
 
 ## 資料夾結構
 
 ```
-aop533.github.io/
+tutorials/
 ├── index.html                  ← 首頁導覽
 └── docs/
     └── dev-tools/
